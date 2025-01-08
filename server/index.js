@@ -55,6 +55,7 @@ async function run() {
   try {
     const db = client.db("plantNetDB");
     const userCollection = db.collection("users");
+    const plantCollection = db.collection("plants");
 
     // Generate jwt token
     app.post("/jwt", async (req, res) => {
@@ -86,14 +87,13 @@ async function run() {
     });
 
     /**********************
-     * User related API
+     * Users related API
      ********************/
     // save or update user in DB
     app.post("/users/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const user = req.body;
-
       // check if user exist
       const isExists = await userCollection.findOne(query);
       if (isExists) {
@@ -104,6 +104,21 @@ async function run() {
         role: "customer",
         timestamp: Date.now(),
       });
+      res.send(result);
+    });
+
+    /**********************
+     * plants related API
+     ********************/
+    // upload a plant in db
+    app.post("/plants", verifyToken, async (req, res) => {
+      const plant = req.body;
+      const result = await plantCollection.insertOne(plant);
+      res.send(result);
+    });
+
+    app.get("/plants", async (req, res) => {
+      const result = await plantCollection.find().toArray();
       res.send(result);
     });
 
