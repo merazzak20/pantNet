@@ -56,6 +56,7 @@ async function run() {
     const db = client.db("plantNetDB");
     const userCollection = db.collection("users");
     const plantCollection = db.collection("plants");
+    const orderCollection = db.collection("orders");
 
     // Generate jwt token
     app.post("/jwt", async (req, res) => {
@@ -108,17 +109,36 @@ async function run() {
     });
 
     /**********************
+     * Users related API
+     ********************/
+    // save a order
+    app.post("/orders", verifyToken, async (req, res) => {
+      const purchaseInfo = req.body;
+      const result = await orderCollection.insertOne(purchaseInfo);
+      res.send(result);
+    });
+
+    /**********************
      * plants related API
      ********************/
+    // Get specific plant data
+    app.get("/plants/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await plantCollection.findOne(query);
+      res.send(result);
+    });
+
+    // Get all plant data
+    app.get("/plants", async (req, res) => {
+      const result = await plantCollection.find().toArray();
+      res.send(result);
+    });
+
     // upload a plant in db
     app.post("/plants", verifyToken, async (req, res) => {
       const plant = req.body;
       const result = await plantCollection.insertOne(plant);
-      res.send(result);
-    });
-
-    app.get("/plants", async (req, res) => {
-      const result = await plantCollection.find().toArray();
       res.send(result);
     });
 
