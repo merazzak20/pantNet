@@ -13,10 +13,10 @@ import toast from "react-hot-toast";
 import LoadingSpinner from "../Shared/LoadingSpinner";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 
-const PurchaseModal = ({ closeModal, isOpen, plant }) => {
+const PurchaseModal = ({ closeModal, isOpen, plant, refetch }) => {
   const { user, loading } = useAuth();
   const axiosSecure = useAxiosSecure();
-  console.log(user);
+  // console.log(user);
   const { name, price, category, quantity, _id, sellerInfo } = plant;
   const [totalQuantity, setTotalQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(price);
@@ -55,8 +55,15 @@ const PurchaseModal = ({ closeModal, isOpen, plant }) => {
 
   const handlePurchase = async () => {
     console.table(purchaseInfo);
+    if (totalQuantity <= 0) {
+      return toast.error("Quantity does not less than 1");
+    }
     try {
       await axiosSecure.post("/orders", purchaseInfo);
+      await axiosSecure.patch(`/plants/quantity/${_id}`, {
+        quantityToUpdate: totalQuantity,
+      });
+      refetch();
       toast.success("Order Successful.");
     } catch (err) {
       console.log(err);

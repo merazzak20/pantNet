@@ -14,7 +14,11 @@ const PlantDetails = () => {
   let [isOpen, setIsOpen] = useState(false);
   const axiosPublic = useAxiosPublic();
 
-  const { data: plant, isLoading } = useQuery({
+  const {
+    data: plant = {},
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["plant", id],
     queryFn: async () => {
       const res = await axiosPublic(`plants/${id}`); //no need to write get for get operation
@@ -108,6 +112,7 @@ const PlantDetails = () => {
           <hr className="my-6" />
 
           <PurchaseModal
+            refetch={refetch}
             plant={plant}
             closeModal={closeModal}
             isOpen={isOpen}

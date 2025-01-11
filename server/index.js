@@ -109,12 +109,20 @@ async function run() {
     });
 
     /**********************
-     * Users related API
+     * Orders related API
      ********************/
     // save a order
     app.post("/orders", verifyToken, async (req, res) => {
       const purchaseInfo = req.body;
       const result = await orderCollection.insertOne(purchaseInfo);
+      res.send(result);
+    });
+
+    // get all order for a specific customer
+    app.get("/customer-orders/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { "customer.email": email };
+      const result = await orderCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -139,6 +147,20 @@ async function run() {
     app.post("/plants", verifyToken, async (req, res) => {
       const plant = req.body;
       const result = await plantCollection.insertOne(plant);
+      res.send(result);
+    });
+
+    // Manage plant quantity
+    app.patch("/plants/quantity/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const { quantityToUpdate } = req.body;
+      const updateDoc = {
+        $inc: {
+          quantity: -quantityToUpdate,
+        },
+      };
+      const result = await plantCollection.updateOne(query, updateDoc);
       res.send(result);
     });
 
