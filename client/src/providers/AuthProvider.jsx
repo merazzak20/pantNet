@@ -59,22 +59,8 @@ const AuthProvider = ({ children }) => {
         currentUser?.displayName,
         currentUser?.photoURL
       );
-      if (
-        currentUser?.email &&
-        (currentUser?.displayName || currentUser?.photoURL)
-      ) {
+      if (currentUser?.email) {
         setUser(currentUser);
-
-        const userInfo = {
-          name: currentUser?.displayName,
-          image: currentUser?.photoURL,
-          email: currentUser.email,
-        };
-        // save user in db
-        await axios.post(
-          `${import.meta.env.VITE_API_URL}/users/${currentUser?.email}`,
-          userInfo
-        );
 
         // Get JWT token
         await axios.post(
