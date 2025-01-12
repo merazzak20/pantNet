@@ -122,7 +122,41 @@ async function run() {
     app.get("/customer-orders/:email", async (req, res) => {
       const email = req.params.email;
       const query = { "customer.email": email };
-      const result = await orderCollection.find(query).toArray();
+      const result = await orderCollection
+        .aggregate([
+          {
+            $match: query,
+          },
+          {
+            $addFields: {
+              plantId: { $toObjectId: "$plantId" },
+            },
+          },
+          {
+            $lookup: {
+              from: "plants",
+              localField: "plantId",
+              foreignField: "_id",
+              as: "plantItems",
+            },
+          },
+          {
+            $unwind: "$plantItems",
+          },
+          {
+            $addFields: {
+              name: "$plantItems.name",
+              image: "$plantItems.image",
+              category: "$plantItems.category",
+            },
+          },
+          {
+            $project: {
+              plantItems: 0,
+            },
+          },
+        ])
+        .toArray();
       res.send(result);
     });
 
