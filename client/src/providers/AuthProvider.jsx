@@ -43,6 +43,7 @@ const AuthProvider = ({ children }) => {
   };
 
   const updateUserProfile = (name, photo) => {
+    console.log(name, photo);
     return updateProfile(auth.currentUser, {
       displayName: name,
       photoURL: photo,
@@ -52,18 +53,27 @@ const AuthProvider = ({ children }) => {
   // onAuthStateChange
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      console.log("CurrentUser-->", currentUser?.email);
-      if (currentUser?.email) {
+      console.log(
+        "CurrentUser-->",
+        currentUser?.email,
+        currentUser?.displayName,
+        currentUser?.photoURL
+      );
+      if (
+        currentUser?.email &&
+        (currentUser?.displayName || currentUser?.photoURL)
+      ) {
         setUser(currentUser);
 
+        const userInfo = {
+          name: currentUser?.displayName,
+          image: currentUser?.photoURL,
+          email: currentUser.email,
+        };
         // save user in db
-        axios.post(
+        await axios.post(
           `${import.meta.env.VITE_API_URL}/users/${currentUser?.email}`,
-          {
-            name: currentUser?.displayName,
-            image: currentUser?.photoURL,
-            email: currentUser.email,
-          }
+          userInfo
         );
 
         // Get JWT token

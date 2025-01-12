@@ -12,8 +12,10 @@ import useAuth from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 import LoadingSpinner from "../Shared/LoadingSpinner";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
+import { useNavigate } from "react-router-dom";
 
 const PurchaseModal = ({ closeModal, isOpen, plant, refetch }) => {
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
   const axiosSecure = useAxiosSecure();
   // console.log(user);
@@ -62,9 +64,11 @@ const PurchaseModal = ({ closeModal, isOpen, plant, refetch }) => {
       await axiosSecure.post("/orders", purchaseInfo);
       await axiosSecure.patch(`/plants/quantity/${_id}`, {
         quantityToUpdate: totalQuantity,
+        status: "decrease",
       });
       refetch();
       toast.success("Order Successful.");
+      navigate("/dashboard/my-orders");
     } catch (err) {
       console.log(err);
     } finally {

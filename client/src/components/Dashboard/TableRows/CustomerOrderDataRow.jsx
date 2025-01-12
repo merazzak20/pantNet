@@ -1,10 +1,33 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
 import DeleteModal from "../../Modal/DeleteModal";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import toast from "react-hot-toast";
 const CustomerOrderDataRow = ({ order, refetch }) => {
-  const { image, name, price, category, quantity, status } = order;
+  const axiosSecure = useAxiosSecure();
+  const { image, name, price, category, quantity, status, _id, plantId } =
+    order;
   let [isOpen, setIsOpen] = useState(false);
   const closeModal = () => setIsOpen(false);
+
+  // handle order cancelation
+  const handleCancel = async () => {
+    try {
+      console.log("Sending DELETE request to:", `/orders/${_id}`);
+      await axiosSecure.delete(`/orders/${_id}`);
+      await axiosSecure.patch(`/plants/quantity/${plantId}`, {
+        quantityToUpdate: quantity,
+        status: "increase",
+      });
+      toast.success("Successfuly Canceled");
+      refetch();
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response.data);
+    } finally {
+      closeModal();
+    }
+  };
 
   return (
     <tr>
@@ -47,7 +70,11 @@ const CustomerOrderDataRow = ({ order, refetch }) => {
           <span className="relative cursor-pointer">Cancel</span>
         </button>
 
-        <DeleteModal isOpen={isOpen} closeModal={closeModal} />
+        <DeleteModal
+          handleCancel={handleCancel}
+          isOpen={isOpen}
+          closeModal={closeModal}
+        />
       </td>
     </tr>
   );

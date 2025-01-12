@@ -108,6 +108,32 @@ async function run() {
       res.send(result);
     });
 
+    // request for seller account
+    app.patch("/users/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await userCollection.findOne(query);
+      if (!user || user.status === "Requested") {
+        return res
+          .status(400)
+          .send("You are alrady requested, wait some time!");
+      }
+      const updatedDoc = {
+        $set: {
+          status: "Requested",
+        },
+      };
+      const result = await userCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    });
+
+    // get user role
+    app.get("/user/role/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await userCollection.findOne({ email });
+      res.send({ role: result?.role });
+    });
+
     /**********************
      * Orders related API
      ********************/
@@ -118,7 +144,7 @@ async function run() {
       res.send(result);
     });
 
-    // get all order for a specific customer
+    // get all order for a specific customer by email
     app.get("/customer-orders/:email", async (req, res) => {
       const email = req.params.email;
       const query = { "customer.email": email };
@@ -160,6 +186,18 @@ async function run() {
       res.send(result);
     });
 
+    // delete order
+    app.delete("/orders/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const order = await orderCollection.findOne(query);
+      if (order.status === "Delivered") {
+        return res.status(409).send("Can't cancel once it was delivered");
+      }
+      const result = await orderCollection.deleteOne(query);
+      res.send(result);
+    });
+
     /**********************
      * plants related API
      ********************/
@@ -188,12 +226,19 @@ async function run() {
     app.patch("/plants/quantity/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const { quantityToUpdate } = req.body;
-      const updateDoc = {
+      const { quantityToUpdate, status } = req.body;
+      let updateDoc = {
         $inc: {
           quantity: -quantityToUpdate,
         },
       };
+      if (status === "increase") {
+        updateDoc = {
+          $inc: {
+            quantity: quantityToUpdate,
+          },
+        };
+      }
       const result = await plantCollection.updateOne(query, updateDoc);
       res.send(result);
     });
